@@ -31,6 +31,14 @@ sudo install minikube-linux-amd64 /usr/local/bin/minikube
 
 Detail is [here](https://minikube.sigs.k8s.io/docs/start/?arch=%2Flinux%2Fx86-64%2Fstable%2Fbinary+download).
 
+### Build App
+
+```sh
+docker login
+docker build -t mogumogusityau/service:v1.0.0 .
+docker push mogumogusityau/service:v1.0.0
+```
+
 
 
 ## Open cluster
