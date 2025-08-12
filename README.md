@@ -41,93 +41,42 @@ docker push mogumogusityau/service:v1.0.0
 
 
 
-## Open cluster
-
-### Run Minikube
+## Minikube Commands
 
 ```sh
-minikube start --driver=docker
-```
-
-### Add addons on Minikube
-
-```sh
-minikube addons enable metrics-server
-```
-
-### Check if cluster is running
-
-```sh
-kubectl get nodes
+minikube start --driver=docker --nodes=2
 ```
 
 
+## Kubectl Commands
 
-## Run Cluster
+```bash
+# Apply
+kubectl apply -f k8s/sre-01-minikube-pod/01-namespace.yaml
+kubectl apply -f k8s/sre-01-minikube-pod/02-pod.yaml
+kubectl apply -f k8s/sre-01-minikube-pod/03-service.yaml
 
-### Run Namespace
+# List
+kubectl get pod,svc -n sre-lab
 
-```sh
-kubectl apply -f k8s/namespace.yml
+# Describe (spec/status 이벤트 확인)
+kubectl describe pod sre-01-pod -n sre-lab
+
+# Logs (Fastify 로그 확인)
+kubectl logs -f sre-01-pod -n sre-lab
+
+# Exec (컨테이너 쉘 진입)
+kubectl exec -it sre-01-pod -n sre-lab -- sh
+
+
+kubectl apply -f ns.yaml -f pod.yaml -f svc.yaml
+kubectl get pod,svc,endpoints -n test
+kubectl describe svc test-label -n test   # Endpoints에 Pod IP가 잡혀야 정상
+kubectl port-forward -n test svc/test-label 3000:3000
+curl http://localhost:3000/healthz
+curl http://localhost:3000/readyz
 ```
 
-### Run Deployment
-
-```sh
-kubectl apply -f k8s/deployment.yml
-```
-
-### Run Service
-
-```sh
-kubectl apply -f k8s/service.yaml
-```
-
-
-
-## Check Cluster
-
-### Check Namespace
-
-```sh
-kubectl get namespaces
-```
-
-### Check Pods
-
-```sh
-kubectl get pods -n test
-```
-
-### Check Services
-
-```sh
-kubectl get services -n test
-```
-
-### Check Deployments
-
-```sh
-kubectl get deployments -n test
-```
-
-
-## Result
-
-Because replicas are set to 2, two pods are created. The service is set to NodePort, so it can be accessed from outside the cluster.
-
-```sh
-mogumogu@mogumogu~/Downloads$ kubectl get pods -n test
-NAME                           READY   STATUS    RESTARTS   AGE
-test-deploy-67fb448ff4-prvq7   1/1     Running   0          127m
-test-deploy-67fb448ff4-t57cj   1/1     Running   0          127m
-mogumogu@mogumogu:~/Downloads$ kubectl get services -n test
-NAME       TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE
-test-svc   NodePort   10.100.132.44   <none>        80:30080/TCP   127m
-mogumogu@mogumogu:~/Downloads$ kubectl get deployments -n test
-NAME          READY   UP-TO-DATE   AVAILABLE   AGE
-test-deploy   2/2     2            2           127m
-```
 
 
 ## Criteria for Resource Requests and Limits in Kubernetes Deployment
