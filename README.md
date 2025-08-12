@@ -45,36 +45,42 @@ docker push mogumogusityau/service:v1.0.0
 
 ```sh
 minikube start --driver=docker --nodes=2
+minikube status
 ```
 
 
 ## Kubectl Commands
 
 ```bash
-# Apply
-kubectl apply -f k8s/sre-01-minikube-pod/01-namespace.yaml
-kubectl apply -f k8s/sre-01-minikube-pod/02-pod.yaml
-kubectl apply -f k8s/sre-01-minikube-pod/03-service.yaml
+# 0) Create namespace first
+kubectl apply -f k8s/namespace.yaml
 
-# List
-kubectl get pod,svc -n sre-lab
+# 1) Apply Pod and Service
+kubectl apply -f k8s/pod.yaml
+kubectl apply -f k8s/service.yaml
 
-# Describe (spec/status 이벤트 확인)
-kubectl describe pod sre-01-pod -n sre-lab
+# 2) List resources in 'test' namespace
+kubectl get pod,svc -n test
 
-# Logs (Fastify 로그 확인)
-kubectl logs -f sre-01-pod -n sre-lab
+# 3) Describe Pod/Service to verify specs and events
+kubectl describe pod pod -n test
+kubectl describe svc test-svc -n test
 
-# Exec (컨테이너 쉘 진입)
-kubectl exec -it sre-01-pod -n sre-lab -- sh
+# 4) Check endpoints via EndpointSlice (no deprecation warning)
+kubectl get endpointslice -n test -l app.kubernetes.io/name=test-svc
+# (or, legacy)
+kubectl get endpoints -n test test-svc
 
+# 5) Port-forward Service and hit health endpoints
+kubectl port-forward -n test svc/test-svc 3000:3000
 
-kubectl apply -f ns.yaml -f pod.yaml -f svc.yaml
-kubectl get pod,svc,endpoints -n test
-kubectl describe svc test-label -n test   # Endpoints에 Pod IP가 잡혀야 정상
-kubectl port-forward -n test svc/test-label 3000:3000
+# In another shell:
 curl http://localhost:3000/healthz
 curl http://localhost:3000/readyz
+
+# 6) Logs & Exec into the Pod
+kubectl logs -f pod -n test
+kubectl exec -it pod -n test -- sh
 ```
 
 
