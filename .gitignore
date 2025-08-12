@@ -1,3 +1,7 @@
+# vscode
+.vscode
+
+# nodejs
 node_modules
 build
 npm-debug.log
