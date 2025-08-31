@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: service1
+  name: user-service
   labels:
-    app.kubernetes.io/name: service1
+    app.kubernetes.io/name: user-service
 spec:
   containers:
     - name: app
-      image: mogumogusityau/service1:1.0.0
+      image: mogumogusityau/user-service:1.1.0
       imagePullPolicy: IfNotPresent
       ports:
         - containerPort: 3000
@@ -15,5 +15,5 @@ spec:
         - name: PORT
           valueFrom:
             configMapKeyRef:
-              name: service1-config
+              name: user-service-config
               key: PORT
