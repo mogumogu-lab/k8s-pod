@@ -52,35 +52,80 @@ minikube status
 ## Kubectl Commands
 
 ```bash
-# 0) Create namespace first
-kubectl apply -f k8s/namespace.yaml
+# deployment
+## Preview final manifests (see what will be applied)
+kubectl kustomize k8s/overlays/dev | less
 
-# 1) Apply Pod and Service
-kubectl apply -f k8s/pod.yaml
-kubectl apply -f k8s/service.yaml
+## Apply all (Namespace + resources via overlay)
+kubectl apply -k k8s/overlays/dev
 
-# 2) List resources in 'test' namespace
-kubectl get pod,svc -n test
 
-# 3) Describe Pod/Service to verify specs and events
-kubectl describe pod pod -n test
-kubectl describe svc test-svc -n test
 
-# 4) Check endpoints via EndpointSlice (no deprecation warning)
-kubectl get endpointslice -n test -l app.kubernetes.io/name=test-svc
-# (or, legacy)
-kubectl get endpoints -n test test-svc
+# Basic
+## List namespaces
+kubectl get ns
 
-# 5) Port-forward Service and hit health endpoints
-kubectl port-forward -n test svc/test-svc 3000:3000
+## List everything in a namespace
+kubectl get all -n app-dev
 
-# In another shell:
-curl http://localhost:3000/healthz
-curl http://localhost:3000/readyz
+## Narrow down
+kubectl get deploy,svc,cm,po -n app-dev
+kubectl get po -l app.kubernetes.io/name=service1 -n app-dev  # by label
 
-# 6) Logs & Exec into the Pod
-kubectl logs -f pod -n test
-kubectl exec -it pod -n test -- sh
+
+# Details
+## Describe a Deployment or Pod
+kubectl describe deploy/service1 -n app-dev
+kubectl describe po/<pod-name> -n app-dev
+
+## Recent events in the namespace (very useful for failures)
+kubectl get events -n app-dev --sort-by=.lastTimestamp
+
+
+
+# Logs
+## Logs from a Deployment (kubectl can resolve to pods)
+kubectl logs deploy/service1 -n app-dev --tail=100 -f
+
+## Or pick a specific pod
+kubectl logs <pod-name> -n app-dev -f
+
+## If multiple containers
+kubectl logs <pod-name> -c app -n app-dev -f 
+
+
+
+# Execution
+## Exec into a pod (interactive shell)
+kubectl exec -it <pod-name> -n app-dev -- /bin/sh
+
+## Check environment vars
+kubectl exec <pod-name> -n app-dev -- env | grep PORT
+
+## Port-forward service (local 8080 -> service port 80)
+kubectl port-forward svc/service1 8080:80 -n app-dev
+
+# Rollout / Scale / Image
+## Rollout status (wait until ready)
+kubectl rollout status deploy/service1 -n app-dev
+
+## Restart a deployment (triggers rolling update)
+kubectl rollout restart deploy/service1 -n app-dev
+
+## Scale replicas
+kubectl scale deploy/service1 -n app-dev --replicas=2
+
+## Set new image (quick test; CI/CD에선 Kustomize images 권장)
+kubectl set image deploy/service1 app=mogumogusityau/service1:1.0.1 -n app-dev
+
+
+
+# Resource / Debug
+## Needs metrics-server
+kubectl top pod -n app-dev
+
+## Ephemeral debug container (when base image lacks tools)
+kubectl debug po/<pod-name> -n app-dev --image=busybox -it --target=app
 ```
 
 
